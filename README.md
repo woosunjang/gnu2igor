@@ -11,6 +11,6 @@ Based on [python 3](https://python.org), and have external dependencies on the f
 * [argparse](https://docs.python.org/3/library/argparse.html) 
 
 
-Usages
-------
+Example usages
+--------------
 Converts [wannier90](http://www.wannier.org) generated gnuplot bandstructure files to [Igor Pro](https://www.wavemetrics.com/products/igorpro/igorpro.htm) itx file format.
