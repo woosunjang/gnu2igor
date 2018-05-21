@@ -77,15 +77,9 @@ class gnu2igor(object):
     def gnuband(self, fermi, shift, guide):
         input_name = self.input_name
 
-        if fermi is None:
-            fermi_e = 0.0
-        else:
-            fermi_e = fermi
-
         # Shifting for the fermi level value
-        # Extra shifting of vbm only if it is turned on
         if shift is True:
-            self.band -= fermi_e
+            self.band -= fermi
 
         def bandname():
             tmp_wavename = []
@@ -219,7 +213,7 @@ class gnu2igor(object):
                             "X SetAxis left -3,3"
                             )
 
-            preset_guide_text = ("\nX ModifyGraph userticks(bottom)={test_guide,test_guide_text}\n"
+            preset_guide_text = ("\nX ModifyGraph userticks(bottom)={" + input_name + "_guide," + input_name + "_guide_text}\n"
                                  "X ModifyGraph noLabel=0\n")
 
             out.write(preset)
