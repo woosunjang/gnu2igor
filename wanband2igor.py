@@ -4,13 +4,58 @@ import numpy as np
 import re
 import argparse
 
-class gnu2igor(object):
-    def __init__(self, outfile):
+
+class GnuToIgor(object):
+    def __init__(self, infile, header=None, gnufile=None, outfile=None):
+        self.infile = infile
+        self.outfile = outfile or (str(infile) + ".itx")
+        self.gnufile = gnufile
+        self.waves = None
+        self.header = None
+        return
+
+    def read_dat(self):
+        data = []
+        with open(self.infile, "r") as file:
+            lines = file.readlines()
+            for x in lines:
+                data.append(x.split())
+        numitem = len(data[0])
+        numlines = len(data)
+        data = np.reshape(np.array(data, dtype='d'), (numlines, numitem))
+        self.waves = data
+        return
+
+    def write_itx(self):
+        with open(self.outfile, "w") as out:
+            out.write()
+        return
+
+    layout_preset = ("X DefaultFont/U \"Times New Roman\"\n"
+                     "X ModifyGraph width=340.157,height=226.772\n"
+                     "X ModifyGraph marker=19\n"
+                     "X ModifyGraph lSize=1.5\n"
+                     "X ModifyGraph tick=2\n"
+                     "X ModifyGraph mirror=1\n"
+                     "X ModifyGraph fSize=24\n"
+                     "X ModifyGraph lblMargin(left)=15,lblMargin(bottom)=10\n"
+                     "X ModifyGraph standoff=0\n"
+                     "X ModifyGraph axThick=1.5\n"
+                     "X ModifyGraph axisOnTop=1\n"
+                     )
+
+# TODO : combining both class objects
+class wanband2igor(object):
+    def __init__(self, outfile, skipname):
         self.kpts = None
         self.ktraj = None
         self.band = None
         self.guideticks = None
-        self.input_name = input("Please input the name of system  :  ")
+
+        if skipname is None:
+            self.input_name = input("Please input the name of system  :  ")
+        else:
+            self.input_name = skipname
 
         if outfile is None:
             self.outfile = "band.itx"
@@ -74,7 +119,7 @@ class gnu2igor(object):
 
             self.guideticks = ticks
 
-    def gnuband(self, fermi, shift, guide):
+    def gnuband(self, fermi, shift, guide, skipplot):
         input_name = self.input_name
 
         # Shifting for the fermi level value
@@ -208,12 +253,15 @@ class gnu2igor(object):
 
             preset_guide = ("\nX AppendToGraph " + input_name + "_guide_y1 " + input_name + "_guide_y2 vs " +
                             input_name + "_guide\n"
-                            "X ModifyGraph mode(" + input_name + "_guide_y1)=1,rgb(" + input_name + "_guide_y1)=(0,0,0)\n"
-                            "X ModifyGraph mode(" + input_name + "_guide_y2)=1,rgb(" + input_name + "_guide_y2)=(0,0,0)\n"
+                            "X ModifyGraph mode(" + input_name + "_guide_y1)=1,rgb("
+                            + input_name + "_guide_y1)=(0,0,0)\n"
+                            "X ModifyGraph mode(" + input_name + "_guide_y2)=1,rgb("
+                            + input_name + "_guide_y2)=(0,0,0)\n"
                             "X SetAxis left -3,3"
                             )
 
-            preset_guide_text = ("\nX ModifyGraph userticks(bottom)={" + input_name + "_guide," + input_name + "_guide_text}\n"
+            preset_guide_text = ("\nX ModifyGraph userticks(bottom)={" + input_name + "_guide,"
+                                 + input_name + "_guide_text}\n"
                                  "X ModifyGraph noLabel=0\n")
 
             out.write(preset)
@@ -229,15 +277,18 @@ class gnu2igor(object):
             bandwave()
             guidewave()
             guide_textwave()
-            displayband(wavename)
-            displaypreset()
+
+            if skipplot is False:
+                displayband(wavename)
+                displaypreset()
+
             return
 
 
 def executescript(args):
-    p = gnu2igor(args.output)
+    p = wanband2igor(args.output, args.skipname)
     p.gnuband_parser(args.xdata, args.ydata, args.gnudata)
-    p.gnuband(args.fermi, args.shift, args.guide)
+    p.gnuband(args.fermi, args.shift, args.guide, args.skipplot)
     return
 
 
@@ -250,8 +301,10 @@ def main():
     parser.add_argument("-p", dest="gnudata", type=str, default="wannier90_band.gnu")
     parser.add_argument("-o", dest="output", type=str, default="band.itx")
     parser.add_argument("-f", dest="fermi", type=float, default=0.0)
+    parser.add_argument("-n", dest="skipname", type=str, default=None)
     parser.add_argument("-s", dest="shift", action="store_true")
     parser.add_argument("-g", dest="guide", action="store_true")
+    parser.add_argument("-S", dest="skipplot", action="store_true")
     parser.set_defaults(func=executescript)
 
     args = parser.parse_args()
