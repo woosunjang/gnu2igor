@@ -5,13 +5,16 @@ import re
 import argparse
 
 
+# TODO : splitting by the number of characters in wave name
 class GnuToIgor(object):
     def __init__(self, infile, header=None, gnufile=None, outfile=None):
         self.infile = infile
         self.outfile = outfile or (str(infile) + ".itx")
         self.gnufile = gnufile
+        self.header = header
         self.waves = None
-        self.header = None
+        self.numitems = None
+        self.numlines = None
         return
 
     def read_dat(self):
@@ -20,29 +23,74 @@ class GnuToIgor(object):
             lines = file.readlines()
             for x in lines:
                 data.append(x.split())
-        numitem = len(data[0])
-        numlines = len(data)
-        data = np.reshape(np.array(data, dtype='d'), (numlines, numitem))
+        self.numitems = len(data[0])
+        self.numlines = len(data)
+        data = np.reshape(np.array(data, dtype='d'), (self.numlines, self.numitems))
         self.waves = data
         return
 
-    def write_itx(self):
+    def write_itx(self, plot=False, xindex=0):
+        layout_preset = ("X DefaultFont/U \"Times New Roman\"\n"
+                         "X ModifyGraph width=340.157,height=226.772\n"
+                         "X ModifyGraph marker=19\n"
+                         "X ModifyGraph lSize=1.5\n"
+                         "X ModifyGraph tick=2\n"
+                         "X ModifyGraph mirror=1\n"
+                         "X ModifyGraph fSize=24\n"
+                         "X ModifyGraph lblMargin(left)=15,lblMargin(bottom)=10\n"
+                         "X ModifyGraph standoff=0\n"
+                         "X ModifyGraph axThick=1.5\n"
+                         "X ModifyGraph axisOnTop=1\n"
+                         )
+
         with open(self.outfile, "w") as out:
-            out.write()
+            out.write("IGOR\n")
+            out.write("WAVES/D")
+            if self.header is not None:
+                for x in self.header:
+                    out.write(" " + str(x))
+            else:
+                for i in range(self.numitems):
+                    out.write(" wave%s" % i)
+            out.write("\n")
+            out.write("BEGIN\n")
+
+            for x in self.waves:
+                for y in x:
+                    out.write(" " + str(y))
+                out.write("\n")
+            out.write("END\n")
+
+            if plot is True:
+                if self.header is not None:
+                    count = 0
+                    for i in range(self.numitems):
+                        if xindex == i:
+                            pass
+                        else:
+                            if count == 0:
+                                out.write("X Display %s vs %s\n" % (self.header[i], self.header[xindex]))
+                                count += 1
+                            else:
+                                out.write("X AppendToGraph %s vs %s\n" % (self.header[i], self.header[xindex]))
+
+                else:
+                    count = 0
+                    for i in range(self.numitems):
+                        if xindex == i:
+                            pass
+                        else:
+                            if count == 0:
+                                out.write("X Display wave%s vs wave%s\n" % (i, xindex))
+                                count += 1
+                            else:
+                                out.write("X AppendToGraph wave%s vs wave%s\n" % (i, xindex))
+
+                out.write(layout_preset)
+
         return
 
-    layout_preset = ("X DefaultFont/U \"Times New Roman\"\n"
-                     "X ModifyGraph width=340.157,height=226.772\n"
-                     "X ModifyGraph marker=19\n"
-                     "X ModifyGraph lSize=1.5\n"
-                     "X ModifyGraph tick=2\n"
-                     "X ModifyGraph mirror=1\n"
-                     "X ModifyGraph fSize=24\n"
-                     "X ModifyGraph lblMargin(left)=15,lblMargin(bottom)=10\n"
-                     "X ModifyGraph standoff=0\n"
-                     "X ModifyGraph axThick=1.5\n"
-                     "X ModifyGraph axisOnTop=1\n"
-                     )
+
 
 # TODO : combining both class objects
 class wanband2igor(object):
