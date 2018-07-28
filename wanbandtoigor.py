@@ -91,9 +91,8 @@ class GnuToIgor(object):
         return
 
 
-
 # TODO : combining both class objects
-class wanband2igor(object):
+class WanbandToIgor(object):
     def __init__(self, outfile, skipname):
         self.kpts = None
         self.ktraj = None
@@ -333,27 +332,44 @@ class wanband2igor(object):
             return
 
 
-def executescript(args):
-    p = wanband2igor(args.output, args.skipname)
+def executewanband(args):
+    p = WanbandToIgor(args.output, args.skipname)
     p.gnuband_parser(args.xdata, args.ydata, args.gnudata)
     p.gnuband(args.fermi, args.shift, args.guide, args.skipplot)
+    return
+
+
+def executegnu(args):
+    p = GnuToIgor(args.input, args.header, args.gnu, args.output)
+    p.read_dat()
+    p.write_itx(args.plot, args.xindex)
     return
 
 
 def main():
     # Main parser
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    subparsers = parser.add_subparsers(title="Functions")
+    parser_wband = subparsers.add_parser("wband", formatter_class=argparse.RawTextHelpFormatter)
+    parser_wband.add_argument("-x", dest="xdata", type=str, default="wannier90_band.kpt")
+    parser_wband.add_argument("-y", dest="ydata", type=str, default="wannier90_band.dat")
+    parser_wband.add_argument("-p", dest="gnudata", type=str, default="wannier90_band.gnu")
+    parser_wband.add_argument("-o", dest="output", type=str, default="band.itx")
+    parser_wband.add_argument("-f", dest="fermi", type=float, default=0.0)
+    parser_wband.add_argument("-n", dest="skipname", type=str, default=None)
+    parser_wband.add_argument("-s", dest="shift", action="store_true")
+    parser_wband.add_argument("-g", dest="guide", action="store_true")
+    parser_wband.add_argument("-S", dest="skipplot", action="store_true")
+    parser_wband.set_defaults(func=executewanband)
 
-    parser.add_argument("-x", dest="xdata", type=str, default="wannier90_band.kpt")
-    parser.add_argument("-y", dest="ydata", type=str, default="wannier90_band.dat")
-    parser.add_argument("-p", dest="gnudata", type=str, default="wannier90_band.gnu")
-    parser.add_argument("-o", dest="output", type=str, default="band.itx")
-    parser.add_argument("-f", dest="fermi", type=float, default=0.0)
-    parser.add_argument("-n", dest="skipname", type=str, default=None)
-    parser.add_argument("-s", dest="shift", action="store_true")
-    parser.add_argument("-g", dest="guide", action="store_true")
-    parser.add_argument("-S", dest="skipplot", action="store_true")
-    parser.set_defaults(func=executescript)
+    parser_gnu = subparsers.add_parser("gnu", formatter_class=argparse.RawTextHelpFormatter)
+    parser_gnu.add_argument("-i", dest="input", type=str, required=True)
+    parser_gnu.add_argument("-o", dest="output", type=str, default=None)
+    parser_gnu.add_argument("-h", dest="header", type=str, default=None, nargs='*')
+    parser_gnu.add_argument("-g", dest="gnu", type=str, default=None)
+    parser_gnu.add_argument("-p", dest="plot", action="store_true")
+    parser_gnu.add_argument("-x", dest="xindex", type=int, default=0)
+    parser_gnu.set_defaults(func=executegnu)
 
     args = parser.parse_args()
 
