@@ -340,7 +340,7 @@ def executewanband(args):
 
 
 def executegnu(args):
-    p = GnuToIgor(args.input, args.header, args.gnu, args.output)
+    p = GnuToIgor(args.input, args.waveheader, args.gnu, args.output)
     p.read_dat()
     p.write_itx(args.plot, args.xindex)
     return
@@ -365,7 +365,7 @@ def main():
     parser_gnu = subparsers.add_parser("gnu", formatter_class=argparse.RawTextHelpFormatter)
     parser_gnu.add_argument("-i", dest="input", type=str, required=True)
     parser_gnu.add_argument("-o", dest="output", type=str, default=None)
-    parser_gnu.add_argument("-h", dest="header", type=str, default=None, nargs='*')
+    parser_gnu.add_argument("-w", dest="waveheader", type=str, default=None, nargs='*')
     parser_gnu.add_argument("-g", dest="gnu", type=str, default=None)
     parser_gnu.add_argument("-p", dest="plot", action="store_true")
     parser_gnu.add_argument("-x", dest="xindex", type=int, default=0)
